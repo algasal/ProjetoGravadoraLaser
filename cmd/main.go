@@ -1,4 +1,4 @@
-﻿// cmd/gravadoraLaser/main.go
+﻿// cmd/main.go
 package main
 
 import (
