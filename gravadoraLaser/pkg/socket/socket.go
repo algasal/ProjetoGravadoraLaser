@@ -6,7 +6,6 @@ import (
 	"net"
 	"strings"
 	"time"
-	"os"
 )
 
 // Conectar estabelece uma conexão TCP com o host especificado
@@ -20,8 +19,8 @@ func Conectar(host string, porta int) (net.Conn, error) {
 	return conn, nil
 }
 
-// EnviarRequisicao envia uma requisição pelo socket com os comandos para a gravadora.
-func EnviarRequisicao(conn net.Conn, classificacao string) {
+// SelecionarPrograma define qual programa da gravadora será utilizado para a gravação
+func SelecionarPrograma(classificacao string) (string, error) {
 	programas := map[string]string{
 		"A": "0008",
 		"B": "0009",
@@ -32,52 +31,31 @@ func EnviarRequisicao(conn net.Conn, classificacao string) {
 
 	programa, ok := programas[classificacao]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "Classificação inválida: %s\n", classificacao)
-		return
-	}
-
-	// Alterar o programa da gravadora
-	comando_programa := fmt.Sprintf("WX,ProgramNo=%s\r\n", programa)
-	if _, err := conn.Write([]byte(comando_programa)); err != nil {
-		fmt.Fprintf(os.Stderr, "Erro ao definir programa: %v\n", err)
-		return
+		return "", fmt.Errorf("Classificação inválida: %s\n", classificacao)
 	}
 	
-	// Ler resposta da requisição
+	return programa, nil
+}
+
+
+// EnviarRequisicao envia um comando para a gravadora
+func EnviarRequisicao(conn net.Conn, requisicao string) (int, error) {
+	n, err := conn.Write([]byte(requisicao))
+	if err != nil {
+		return 0, fmt.Errorf("Erro ao definir programa: %v\n", err)
+	}
+
+	return n, nil
+}
+
+// LerResposta lê a resposta da gravadora para o comando executado
+func LerResposta(conn net.Conn) string {
 	buffer := make([]byte, 256)
 	n, err := conn.Read(buffer)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Erro ao ler a resposta do socket: %v\n", err)
-		return
+		return fmt.Sprintf("Erro ao ler a resposta do socket: %v\n", err)
 	}
-	
+
 	resposta := strings.TrimSpace(string(buffer[:n]))
-	if resposta == "WX,OK" {
-		fmt.Printf("Definido o programa %s.\nIniciando marcação.", programa)
-	} else {
-		fmt.Fprintf(os.Stderr, "Erro na definição do programa: %s\nConsulte o manual\n", resposta)
-	}
-	
-	// Enviar o comando para iniciar marcação
-	comando_marcar := fmt.Sprintf("WX,StartMarking\r\n")
-	if _, err := conn.Write([]byte(comando_marcar)); err != nil {
-		fmt.Fprintf(os.Stderr, "Erro ao iniciar marcação: %v\n", err)
-		return
-	}
-
-	// Ler a resposta. da requisição
-	//buffer := make([]byte, 256)
-	n, err = conn.Read(buffer)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Erro ao ler a resposta do socket: %v\n", err)
-		return
-	}
-
-	resposta = strings.TrimSpace(string(buffer[:n]))
-	if resposta == "WX,OK" {
-		fmt.Println("Gravação concluída")
-	} else {
-		fmt.Fprintf(os.Stderr, "Erro na gravação: %s\nConsulte o manual\n", resposta)
-	}
-	conn.Close()
+	return resposta
 }
