@@ -40,7 +40,7 @@ func LerLado(port *serial.Port, lado int) (float64, error) {
 	trimmed := strings.TrimSpace(resposta)
 	valor, err := strconv.ParseFloat(trimmed, 64)
 	if err != nil {
-		return 0, fmt.Errorf("error parsing measurement for lado %d: %w", lado, err)
+		return 0, fmt.Errorf("Erro na conversão da medida do lado %d: %w", lado, err)
 	}
 	return valor, nil
 }
