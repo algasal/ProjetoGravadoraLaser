@@ -50,9 +50,9 @@ func MedirPeca(wrapper *serialport.SerialPortWrapper) (float64, error) {
 	}
 
 	max := lados[0]
-	for _, v := range lados {
-		if v > max {
-			max = v
+	for _, lado := range lados {
+		if lado > max {
+			max = lado
 		}
 	}
 	fmt.Printf("Maior lado: %f\n", max)

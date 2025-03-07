@@ -29,7 +29,8 @@ func AbrirPorta(nome string, baud int) (*SerialPortWrapper, error) {
 func LerLado(port *serial.Port, lado int) (float64, error) {
 	serialReader := bufio.NewReader(port)
 	trigger := "?"
-	if _, err := port.Write([]byte(trigger)); err != nil {
+	 _, err := port.Write([]byte(trigger))
+	 if err != nil {
 		return 0, fmt.Errorf("Erro ao escrever na porta serial: %w", err)
 	}
 	resposta, err := serialReader.ReadString('\n')
